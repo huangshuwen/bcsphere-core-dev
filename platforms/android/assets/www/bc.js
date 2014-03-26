@@ -968,7 +968,6 @@
 			else {
 				this.proximity =  (0.89976) * Math.pow(ratio,7.7095) + 0.111;	
 			}
-			alert(JSON.stringify(this));
 		},
 		
 		matchRegion : function(region){

@@ -79,8 +79,8 @@ var app = {
 	startORstopIBeaconScan: function(){
 		var state = $("#scanIBeaconOnOff").val();
 		if(state == 1){
-			//BC.Bluetooth.StartIBeaconScan("e2c56db5-dffb-48d2-b060-d0f5a71096e0");
-			BC.Bluetooth.StartIBeaconScan("00000000-0000-0000-0000-000000000000");
+			BC.Bluetooth.StartIBeaconScan("e2c56db5-dffb-48d2-b060-d0f5a71096e0");
+			//BC.Bluetooth.StartIBeaconScan("00000000-0000-0000-0000-000000000000");
 		}else if(state == 0){
 			BC.Bluetooth.StopIBeaconScan();
 		}
