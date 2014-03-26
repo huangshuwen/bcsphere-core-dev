@@ -154,9 +154,13 @@ var bluetooth = {
 		cordova.exec(callback,errorFunc,"BCBluetooth","stopIBeaconScan",[{"proximityUUID":proximityUUID,"major":major,"minor":minor}]);
 	},
 	
+	startIBeaconAdvertising : function(callback,errorFunc,proximityUUID,major,minor,identifier){
+		cordova.exec(callback,errorFunc,"BCBluetooth","startIBeaconAdvertising",[{"proximityUUID":proximityUUID,"major":major,"minor":minor,"identifier":identifier}]);
+	},
 };
 module.exports = bluetooth;
 
 
 
 });
+

@@ -175,8 +175,8 @@
 	 
 	/**
 	 * Triggered when iBeacon proximity has been updated.
-	 * @example document.addEventListener('ibeaconproximityupdate', onIBeaconUpdate, false);
-	 * function onIBeaconUpdate(arg){
+	 * @example document.addEventListener('ibeaconproximityupdate', onIBeaconProximityUpdate, false);
+	 * function onIBeaconProximityUpdate(arg){
 	 *	 var ibeacon = BC.bluetooth.ibeacons[arg.iBeaconID];
 	 *	 alert("iBeacon proximity: " + ibeacon.proximity);
 	 * }
@@ -186,8 +186,8 @@
 	 
 	/**
 	 * Triggered when iBeacon accuracy has been updated.
-	 * @example document.addEventListener('ibeaconaccuracyupdate', onIBeaconUpdate, false);
-	 * function onIBeaconUpdate(arg){
+	 * @example document.addEventListener('ibeaconaccuracyupdate', onIBeaconAccuracyUpdate, false);
+	 * function onIBeaconAccuracyUpdate(arg){
 	 *	 var ibeacon = BC.bluetooth.ibeacons[arg.iBeaconID];
 	 *	 alert("iBeacon accuracy: " + ibeacon.accuracy);
 	 * }
@@ -297,6 +297,7 @@
 			window.APPID = data.appID;
 			window.DEVICEID = data.deviceID;
 			window.API = data.api;
+			window.VERSION = data.version;
 			
 			//bind ibeacon event
 			if(API == "ios"){
@@ -311,16 +312,16 @@
 						fireIBeaconEvent("newibeacon",iBeaconID);
 					}else{
 						BC.bluetooth.ibeacons[iBeaconID].accuracy = arg.accuracy;
-                        BC.bluetooth.ibeacons[iBeaconID].RSSI = arg.RSSI;
+						BC.bluetooth.ibeacons[iBeaconID].RSSI = arg.RSSI;
 						fireIBeaconEvent("ibeaconaccuracyupdate",iBeaconID);
-
-                        if(BC.bluetooth.ibeacons[iBeaconID].proximity !== arg.proximity){
-                            BC.bluetooth.ibeacons[iBeaconID].proximity = arg.proximity;
+						if(BC.bluetooth.ibeacons[iBeaconID].proximity !== arg.proximity){
+							BC.bluetooth.ibeacons[iBeaconID].proximity = arg.proximity;
 							fireIBeaconEvent("ibeaconproximityupdate",iBeaconID);
 						}
 					}
 				});
 			}
+			
 			bluetooth.getBluetoothState(function(arg){
 				if(arg.state == "false"){
 					bluetooth.isopen = false;
@@ -526,7 +527,9 @@
 				var notifyError = characteristic.notifyError.bind(characteristic,characteristic.notifyError);
 				navigator.bluetooth.notify(notifySuccess,notifyError,characteristic.upper.uniqueID,characteristic.index,data);
 			};
-			
+			this.startIBeaconAdvertising = function(success,error,proximityUUID,major,minor,identifier){
+				navigator.bluetooth.startIBeaconAdvertising(success,error,proximityUUID,major,minor,identifier);
+			};
 			
 		}else{
 			alert(type+" is not support now.");
@@ -579,6 +582,7 @@
 		this.notify = this.bluetoothFuncs.notify;
 		this.startIBeaconScan = this.bluetoothFuncs.startIBeaconScan;
 		this.stopIBeaconScan = this.bluetoothFuncs.stopIBeaconScan;
+		this.startIBeaconAdvertising = this.bluetoothFuncs.startIBeaconAdvertising;
 		
 		this.bluetoothFuncs.initBluetooth();
 
@@ -764,6 +768,20 @@
 	};
 	
 	/** 
+	 * Starts IBeacon Advertising (It's only support IOS >= 7.0 now).
+	 * @memberof Bluetooth
+	 * @method 
+	 * @example BC.Bluetooth.StartIBeaconAdvertising(successFunc,errorFunc,"00000000-0000-0000-0000-000000000000",200,300,"iBeacon Name");
+	 * @param {string} {proximityUUID} - The proximity UUID to looking for
+	 * @param {int} [major] - The major of the ibeacon
+	 * @param {int} [minor] - The minor of the ibeacon
+	 * @param {string} [identifier] - The identifier of the ibeacon
+	 */
+	var StartIBeaconAdvertising = BC.Bluetooth.StartIBeaconAdvertising = function(success,error,proximityUUID,major,minor,identifier){
+		BC.bluetooth.startIBeaconAdvertising(success,error,proximityUUID,major,minor,identifier);
+	};
+	
+	/** 
 	 * Starts a scan for iBeacons.
 	 * @memberof Bluetooth
 	 * @method 
@@ -820,6 +838,9 @@
 					var iBeaconID = manufacturerDataHexStr.substring(startPos + 4,startPos + 44);
 					var txPowerStr = manufacturerDataHexStr.substring(startPos + 44,startPos + 46);
 					var txPower = convertHexStringToInt(txPowerStr);
+					if(txPower > 127){
+						txPower = - (256 - txPower);
+					}
 					
 					if(isNewIBeacon(iBeaconID)){
 						var ibeacon =  new BC.IBeacon(iBeaconID,txPower,RSSI);
@@ -833,7 +854,6 @@
 						BC.bluetooth.ibeacons[iBeaconID].RSSI = RSSI;
 						if(API.toLowerCase() !== "ios" && !isEmpty(BC.bluetooth.region)){
 							BC.bluetooth.ibeacons[iBeaconID].calculateAccuracy();
-							fireIBeaconEvent("ibeaconproximityupdate",iBeaconID);
 						}
 					}
 				}else{
@@ -971,7 +991,7 @@
 	 * @property {string} major - The major number of this iBeacon
 	 * @property {string} minor - The minor number of this iBeacon
 	 * @property {float} accuracy - The accuracy of this iBeacon
-	 * @property {string} proximity - The proximity of this iBeacon(0:Unknown | 1:Immediate | 2:Near | 3:Far)
+	 * @property {int} proximity - The proximity of this iBeacon(0:Unknown | 1:Less than half a meter away | 2:More than half a meter away, but less than four meters away | 3:More than four meters away)
 	 */
 	var IBeacon = BC.IBeacon = function(iBeaconID,txPower,RSSI,accuracy,proximity){
 	    this.iBeaconID = iBeaconID;
@@ -989,10 +1009,12 @@
 		this.minor = convertHexStringToInt(iBeaconID.substring(36,40));
 		this.txPower = txPower;
 		this.RSSI = RSSI;
-		this.proximity = 0;
+		this.proximity = -1;
+		
 		if(isEmpty(proximity)){
 			this.calculateAccuracy();
 		}else{
+			//if this new iBeacon form IOS > 7.0
 			this.accuracy = accuracy;
 			this.proximity = proximity;
 		}
@@ -1006,6 +1028,24 @@
 			}
 			else {
 				this.accuracy =  (0.89976) * Math.pow(ratio,7.7095) + 0.111;	
+			}
+			if(!isNewIBeacon(this.iBeaconID)){
+				fireIBeaconEvent("ibeaconaccuracyupdate",this.iBeaconID);
+			}
+			
+			var newproximity = -1;
+			if(this.accuracy < 0.5){
+				newproximity = 1;
+			}else if(this.accuracy > 0.5 && this.accuracy < 4){
+				newproximity = 2;
+			}else if(this.accuracy > 4){
+				newproximity = 3;
+			}
+			if(this.proximity !== newproximity){
+				this.proximity = newproximity;
+				if(!isNewIBeacon(this.iBeaconID)){
+					fireIBeaconEvent("ibeaconproximityupdate",this.iBeaconID);
+				}
 			}
 		},
 		

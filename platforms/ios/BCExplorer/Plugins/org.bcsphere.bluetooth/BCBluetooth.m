@@ -137,6 +137,7 @@
 
 #define APP_ID @"appID"
 #define API @"api"
+#define VERSION @"VERSION"
 #define IOS @"ios"
 #define IS_IOS_VERSION (([[[UIDevice currentDevice] systemVersion] floatValue] >=7.0)? (YES):(NO))
 
@@ -210,6 +211,7 @@
     [callbackInfo setValue:NOTAVAILABLE forKey:DEVICE_ID];
     [callbackInfo setValue:NOTAVAILABLE forKey:APP_ID];
     [callbackInfo setValue:IOS forKey:API];
+    [callbackInfo setValue:[NSString stringWithFormat:@"%f",[[[UIDevice currentDevice] systemVersion] floatValue]] forKey:VERSION];
     CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:callbackInfo];
     [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
 }
@@ -1919,7 +1921,35 @@
         return;
     }
 }
-          
+- (void)startIBeaconAdvertising:(CDVInvokedUrlCommand *)command{
+    if (self.myPeripheralManager.state != 5) {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
+    
+   
+    NSString *strKUUID = [self parseStringFromJS:command.arguments keyFromJS:BEACON_PROXIMITYUUID];
+    NSString *kIdentifier = [self parseStringFromJS:command.arguments keyFromJS:BEACON_IDENTIFIER];
+    NSUUID *proximityUUID = [[NSUUID alloc] initWithUUIDString:strKUUID];
+    CLBeaconRegion *region;
+    if ([self isNormalString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR]]) {
+        CLBeaconMajorValue majorValue = [[NSString stringWithFormat:@"%1x",[[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR] intValue]] intValue];
+        if ([self isNormalString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MINOR]]) {
+            CLBeaconMinorValue minorValue = [[NSString stringWithFormat:@"%1x",[[self parseStringFromJS:command.arguments keyFromJS:BEACON_MINOR] intValue]] intValue];
+            region = [[CLBeaconRegion alloc] initWithProximityUUID:proximityUUID major:majorValue minor:minorValue identifier:kIdentifier];
+        }else{
+            region = [[CLBeaconRegion alloc] initWithProximityUUID:proximityUUID major:majorValue identifier:kIdentifier];
+        }
+    }else{
+        region = [[CLBeaconRegion alloc] initWithProximityUUID:proximityUUID  identifier:kIdentifier];
+    }
+    NSMutableDictionary *beaconPeripheralData = [region peripheralDataWithMeasuredPower:nil];
+    [self.myPeripheralManager startAdvertising:beaconPeripheralData];
+    
+    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+}
 
 - (void)startIBeaconScan:(CDVInvokedUrlCommand *)command{
    [[NSUserDefaults standardUserDefaults] setValue:command.callbackId forKey:STARTBEACON];
@@ -1930,9 +1960,9 @@
     NSString *kIdentifier = [self parseStringFromJS:command.arguments keyFromJS:BEACON_IDENTIFIER];
     NSUUID *proximityUUID = [[NSUUID alloc] initWithUUIDString:strKUUID];
     if ([self isNormalString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR]]) {
-         CLBeaconMajorValue majorValue = [[self hexStringFromString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR]] intValue];
+         CLBeaconMajorValue majorValue = [[NSString stringWithFormat:@"%1x",[[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR] intValue]] intValue];
         if ([self isNormalString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MINOR]]) {
-            CLBeaconMinorValue minorValue = [[self hexStringFromString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MINOR]] intValue];
+            CLBeaconMinorValue minorValue = [[NSString stringWithFormat:@"%1x",[[self parseStringFromJS:command.arguments keyFromJS:BEACON_MINOR] intValue]] intValue];
             self.beaconRegion = [[CLBeaconRegion alloc] initWithProximityUUID:proximityUUID major:majorValue minor:minorValue identifier:kIdentifier];
         }else{
             self.beaconRegion = [[CLBeaconRegion alloc] initWithProximityUUID:proximityUUID major:majorValue identifier:kIdentifier];
@@ -1954,9 +1984,9 @@
     NSString *kIdentifier = [self parseStringFromJS:command.arguments keyFromJS:BEACON_IDENTIFIER];
     NSUUID *proximityUUID = [[NSUUID alloc] initWithUUIDString:strKUUID];
     if ([self isNormalString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR]]) {
-        CLBeaconMajorValue majorValue = [[self hexStringFromString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR]] intValue];
+        CLBeaconMajorValue majorValue = [[NSString stringWithFormat:@"%1x",[[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR] intValue]] intValue];
         if ([self isNormalString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MINOR]]) {
-            CLBeaconMinorValue minorValue = [[self hexStringFromString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MINOR]] intValue];
+            CLBeaconMinorValue minorValue = [[NSString stringWithFormat:@"%1x",[[self parseStringFromJS:command.arguments keyFromJS:BEACON_MINOR] intValue]] intValue];
             self.beaconRegion = [[CLBeaconRegion alloc] initWithProximityUUID:proximityUUID major:majorValue minor:minorValue identifier:kIdentifier];
         }else{
             self.beaconRegion = [[CLBeaconRegion alloc] initWithProximityUUID:proximityUUID major:majorValue identifier:kIdentifier];
@@ -1989,20 +2019,4 @@
    
 }
 
-- (NSString *)hexStringFromString:(NSString *)string{
-    NSData *myD = [string dataUsingEncoding:NSUTF8StringEncoding];
-    Byte *bytes = (Byte *)[myD bytes];
-
-    NSString *hexStr=@"";
-    for(int i=0;i<[myD length];i++){
-        NSString *newHexStr = [NSString stringWithFormat:@"%x",bytes[i]&0xff];///16进制数
-        
-        if([newHexStr length]==1){
-            hexStr = [NSString stringWithFormat:@"%@0%@",hexStr,newHexStr];
-        }else{
-            hexStr = [NSString stringWithFormat:@"%@%@",hexStr,newHexStr];
-        }
-    }
-    return hexStr;   
-}
 @end
