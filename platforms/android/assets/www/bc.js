@@ -297,6 +297,7 @@
 			window.APPID = data.appID;
 			window.DEVICEID = data.deviceID;
 			window.API = data.api;
+			window.VERSION = data.version;
 			
 			//bind ibeacon event
 			if(API == "ios"){
@@ -526,7 +527,9 @@
 				var notifyError = characteristic.notifyError.bind(characteristic,characteristic.notifyError);
 				navigator.bluetooth.notify(notifySuccess,notifyError,characteristic.upper.uniqueID,characteristic.index,data);
 			};
-			
+			this.startIBeaconAdvertising = function(success,error,proximityUUID,major,minor,identifier){
+				navigator.bluetooth.startIBeaconAdvertising(success,error,proximityUUID,major,minor,identifier);
+			};
 			
 		}else{
 			alert(type+" is not support now.");
@@ -579,6 +582,7 @@
 		this.notify = this.bluetoothFuncs.notify;
 		this.startIBeaconScan = this.bluetoothFuncs.startIBeaconScan;
 		this.stopIBeaconScan = this.bluetoothFuncs.stopIBeaconScan;
+		this.startIBeaconAdvertising = this.bluetoothFuncs.startIBeaconAdvertising;
 		
 		this.bluetoothFuncs.initBluetooth();
 
@@ -761,6 +765,20 @@
 	 */
 	var StartScan = BC.Bluetooth.StartScan = function(uuids){
 		BC.bluetooth.startScan(onGetDevicesSuccess,uuids);
+	};
+	
+	/** 
+	 * Starts IBeacon Advertising (It's only support IOS >= 7.0 now).
+	 * @memberof Bluetooth
+	 * @method 
+	 * @example BC.Bluetooth.StartIBeaconAdvertising(successFunc,errorFunc,"00000000-0000-0000-0000-000000000000",200,300,"iBeacon Name");
+	 * @param {string} {proximityUUID} - The proximity UUID to looking for
+	 * @param {int} [major] - The major of the ibeacon
+	 * @param {int} [minor] - The minor of the ibeacon
+	 * @param {string} [identifier] - The identifier of the ibeacon
+	 */
+	var StartIBeaconAdvertising = BC.Bluetooth.StartIBeaconAdvertising = function(success,error,proximityUUID,major,minor,identifier){
+		BC.bluetooth.startIBeaconAdvertising(success,error,proximityUUID,major,minor,identifier);
 	};
 	
 	/** 

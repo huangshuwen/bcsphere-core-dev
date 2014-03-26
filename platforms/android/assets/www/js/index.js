@@ -521,5 +521,11 @@ var app = {
 				alert(JSON.stringify(arg));
 			},function(){alert("get wifi info error!");}
 		);
-	}
+	},
+	
+	startIBeaconAdvertising : function(){
+		BC.Bluetooth.StartIBeaconAdvertising(function(){alert("iBeacon advertising started!");},function(){alert("start iBeacon error!");},
+			"00000000-0000-0000-0000-000000000000",111,222,""
+		);
+	},
 };

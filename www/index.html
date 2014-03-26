@@ -44,6 +44,8 @@
 				<a id="removeService" href="javascript:void(0)" onclick="app.removeService()" data-role="button" style="clear:both; text-align:center;">Remove Service!</a>
 				<a id="getPairedDevice" href="javascript:void(0)" onclick="app.getPairedDevice()" data-role="button" style="clear:both; text-align:center;">Get All Paired Device!</a>
 				<a id="getConnectedDevice" href="javascript:void(0)" onclick="app.getConnectedDevice()" data-role="button" style="clear:both; text-align:center;">Get All Connected Device!</a>
+				<a id="getConnectedWifiInfo" href="javascript:void(0)" onclick="app.getConnectedWifiInfo()" data-role="button" style="clear:both; text-align:center;">Get Connected Wifi Information!</a>
+				<a id="startIBeaconAdvertising" href="javascript:void(0)" onclick="app.startIBeaconAdvertising()" data-role="button" style="clear:both; text-align:center;">Start IBeacon Advertising(IOS >= 7.0)</a>
 				<div id="user_cont" style="clear:both; margin-top:20px;margin-bottom:10px;">
 					<ul data-role='listview' id="user_view">
 
@@ -51,7 +53,7 @@
 					<ul data-role='listview' id="list_model">
 						<li id="li_tpl" style="display:none">
 							<a href="javascript:void(0)" onclick="app.next_page('aaaa','bbbb','cccc')">
-								<p><h1 dbField='deviceName'>Mokai</h1><p>
+								<p><h1 dbField='deviceName'>Mokai</h1></p>
 								<p>Is Connected: <span dbField='isConnected'>YES</span></p>
 								<p>Device ID: <span dbField='deviceID'>902897712-1292716-129128</span></p>
 							</a>
