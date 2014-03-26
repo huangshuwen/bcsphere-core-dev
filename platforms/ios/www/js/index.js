@@ -41,18 +41,18 @@ var app = {
     
 	onNewIBeacon : function(arg){
 		var ibeacon = BC.bluetooth.ibeacons[arg.iBeaconID];
-		alert("New beacon found : " + JSON.stringify(ibeacon));
+//		alert("New beacon found : " + JSON.stringify(ibeacon));
 	},
 	
 	onIBeaconProximityUpdate : function(arg){
 		var ibeacon = BC.bluetooth.ibeacons[arg.iBeaconID];
-		alert("iBeacon proximity: " + ibeacon.proximity);
+//		alert("iBeacon proximity: " + ibeacon.proximity);
 	},
 	
 	onIBeaconAccuracyUpdate : function(arg){
 		var ibeacon = BC.bluetooth.ibeacons[arg.iBeaconID];
         
-        
+        alert("iBeacon RSSI: " + ibeacon.RSSI);
 //		alert("iBeacon accuracy: " + ibeacon.accuracy);
 	},
 	

@@ -1916,6 +1916,7 @@
     if (![CLLocationManager isRangingAvailable]) {
         CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
         [self.commandDelegate sendPluginResult:result callbackId:[[NSUserDefaults standardUserDefaults] valueForKey:STARTBEACON]];
+        return;
     }
 }
           
@@ -1926,7 +1927,7 @@
    [self startRangingForBeacons];
     
     NSString *strKUUID = [self parseStringFromJS:command.arguments keyFromJS:BEACON_PROXIMITYUUID];
-    NSString *kIdentifier = @"";//[self parseStringFromJS:command.arguments keyFromJS:@""];
+    NSString *kIdentifier = [self parseStringFromJS:command.arguments keyFromJS:BEACON_IDENTIFIER];
     NSUUID *proximityUUID = [[NSUUID alloc] initWithUUIDString:strKUUID];
     if ([self isNormalString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR]]) {
          CLBeaconMajorValue majorValue = [[self hexStringFromString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR]] intValue];
@@ -1950,7 +1951,7 @@
     [[NSUserDefaults standardUserDefaults] setValue:command.callbackId forKey:STOPBEACON];
     
     NSString *strKUUID = [self parseStringFromJS:command.arguments keyFromJS:BEACON_PROXIMITYUUID];
-    NSString *kIdentifier = @"";//[self parseStringFromJS:command.arguments keyFromJS:@""];
+    NSString *kIdentifier = [self parseStringFromJS:command.arguments keyFromJS:BEACON_IDENTIFIER];
     NSUUID *proximityUUID = [[NSUUID alloc] initWithUUIDString:strKUUID];
     if ([self isNormalString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR]]) {
         CLBeaconMajorValue majorValue = [[self hexStringFromString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR]] intValue];

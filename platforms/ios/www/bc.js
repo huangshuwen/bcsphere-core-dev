@@ -311,6 +311,7 @@
 						fireIBeaconEvent("newibeacon",iBeaconID);
 					}else{
 						BC.bluetooth.ibeacons[iBeaconID].accuracy = arg.accuracy;
+                        BC.bluetooth.ibeacons[iBeaconID].RSSI = arg.RSSI;
 						fireIBeaconEvent("ibeaconaccuracyupdate",iBeaconID);
 
                         if(BC.bluetooth.ibeacons[iBeaconID].proximity !== arg.proximity){
