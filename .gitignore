@@ -2,3 +2,6 @@
 gen
 .settings
 bin
+/platforms/android/CordovaLib/gen
+/platforms/android/CordovaLib/.settings
+/platforms/android/CordovaLib/bin
