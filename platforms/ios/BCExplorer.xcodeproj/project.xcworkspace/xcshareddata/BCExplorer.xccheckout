@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>2712E1E7-B1E9-4ED2-A0E7-ACDE46FE5F3D</string>
+	<key>IDESourceControlProjectName</key>
+	<string>BCExplorer</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>B896CC5A-9F2C-4251-A485-A70ACD0B0C0B</key>
+		<string>https://github.com/bcsphere/bcsphere-core-dev.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>platforms/ios/BCExplorer.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>B896CC5A-9F2C-4251-A485-A70ACD0B0C0B</key>
+		<string>../../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/bcsphere/bcsphere-core-dev.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>B896CC5A-9F2C-4251-A485-A70ACD0B0C0B</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>B896CC5A-9F2C-4251-A485-A70ACD0B0C0B</string>
+			<key>IDESourceControlWCCName</key>
+			<string>bcsphere-core-dev</string>
+		</dict>
+	</array>
+</dict>
+</plist>
