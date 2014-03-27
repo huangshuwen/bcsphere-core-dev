@@ -1934,9 +1934,9 @@
     NSUUID *proximityUUID = [[NSUUID alloc] initWithUUIDString:strKUUID];
     CLBeaconRegion *region;
     if ([self isNormalString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR]]) {
-        CLBeaconMajorValue majorValue = [[NSString stringWithFormat:@"%1x",[[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR] intValue]] intValue];
+        CLBeaconMajorValue majorValue = [[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR] intValue];
         if ([self isNormalString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MINOR]]) {
-            CLBeaconMinorValue minorValue = [[NSString stringWithFormat:@"%1x",[[self parseStringFromJS:command.arguments keyFromJS:BEACON_MINOR] intValue]] intValue];
+            CLBeaconMinorValue minorValue = [[self parseStringFromJS:command.arguments keyFromJS:BEACON_MINOR] intValue];
             region = [[CLBeaconRegion alloc] initWithProximityUUID:proximityUUID major:majorValue minor:minorValue identifier:kIdentifier];
         }else{
             region = [[CLBeaconRegion alloc] initWithProximityUUID:proximityUUID major:majorValue identifier:kIdentifier];
@@ -1960,9 +1960,9 @@
     NSString *kIdentifier = [self parseStringFromJS:command.arguments keyFromJS:BEACON_IDENTIFIER];
     NSUUID *proximityUUID = [[NSUUID alloc] initWithUUIDString:strKUUID];
     if ([self isNormalString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR]]) {
-         CLBeaconMajorValue majorValue = [[NSString stringWithFormat:@"%1x",[[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR] intValue]] intValue];
+         CLBeaconMajorValue majorValue = [[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR] intValue];
         if ([self isNormalString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MINOR]]) {
-            CLBeaconMinorValue minorValue = [[NSString stringWithFormat:@"%1x",[[self parseStringFromJS:command.arguments keyFromJS:BEACON_MINOR] intValue]] intValue];
+            CLBeaconMinorValue minorValue = [[self parseStringFromJS:command.arguments keyFromJS:BEACON_MINOR] intValue];
             self.beaconRegion = [[CLBeaconRegion alloc] initWithProximityUUID:proximityUUID major:majorValue minor:minorValue identifier:kIdentifier];
         }else{
             self.beaconRegion = [[CLBeaconRegion alloc] initWithProximityUUID:proximityUUID major:majorValue identifier:kIdentifier];
@@ -1984,9 +1984,9 @@
     NSString *kIdentifier = [self parseStringFromJS:command.arguments keyFromJS:BEACON_IDENTIFIER];
     NSUUID *proximityUUID = [[NSUUID alloc] initWithUUIDString:strKUUID];
     if ([self isNormalString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR]]) {
-        CLBeaconMajorValue majorValue = [[NSString stringWithFormat:@"%1x",[[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR] intValue]] intValue];
+        CLBeaconMajorValue majorValue = [[self parseStringFromJS:command.arguments keyFromJS:BEACON_MAJOR] intValue];
         if ([self isNormalString:[self parseStringFromJS:command.arguments keyFromJS:BEACON_MINOR]]) {
-            CLBeaconMinorValue minorValue = [[NSString stringWithFormat:@"%1x",[[self parseStringFromJS:command.arguments keyFromJS:BEACON_MINOR] intValue]] intValue];
+            CLBeaconMinorValue minorValue = [[self parseStringFromJS:command.arguments keyFromJS:BEACON_MINOR] intValue];
             self.beaconRegion = [[CLBeaconRegion alloc] initWithProximityUUID:proximityUUID major:majorValue minor:minorValue identifier:kIdentifier];
         }else{
             self.beaconRegion = [[CLBeaconRegion alloc] initWithProximityUUID:proximityUUID major:majorValue identifier:kIdentifier];
@@ -2004,13 +2004,13 @@
     if (beacons.count>0) {
         for (CLBeacon *beacon in beacons) {
             NSMutableDictionary *callbackInfo = [[NSMutableDictionary alloc] init];
-            
             [callbackInfo setValue:[NSString stringWithFormat:@"%@",beacon.proximityUUID.UUIDString] forKey:BEACON_PROXIMITYUUID];
             [callbackInfo setValue:[self getBase64EncodedFromData:[[NSString stringWithFormat:@"%@",beacon.major] dataUsingEncoding: NSUTF8StringEncoding]] forKey:BEACON_MAJOR];
             [callbackInfo setValue:[self getBase64EncodedFromData:[[NSString stringWithFormat:@"%@",beacon.minor] dataUsingEncoding: NSUTF8StringEncoding]] forKey:BEACON_MINOR];
             [callbackInfo setValue:[NSString stringWithFormat:@"%d",beacon.proximity] forKey:BEACON_PROXIMITY];
             [callbackInfo setValue:[NSString stringWithFormat:@"%f",beacon.accuracy] forKey:BEACON_ACCURACY];
             [callbackInfo setValue:[NSString stringWithFormat:@"%i",beacon.rssi] forKey:BEACON_RSSI];
+            
             CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:callbackInfo];
             [result setKeepCallbackAsBool:TRUE];
             [self.commandDelegate sendPluginResult:result callbackId:[[NSUserDefaults standardUserDefaults] valueForKey:EVENT_IBEACONACCURACYUPDATE]];
