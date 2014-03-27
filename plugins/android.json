@@ -6,15 +6,15 @@
     "config_munge": {
         "res/xml/config.xml": {
             "/*": {
-                "<feature name=\"BCBluetooth\"><param name=\"android-package\" value=\"org.bcsphere.bluetooth.BCBluetooth\" /></feature>": 1,
-                "<feature name=\"BCWifi\"><param name=\"android-package\" value=\"org.bcsphere.wifi.BCWifi\" /></feature>": 1
+                "<feature name=\"BCWifi\"><param name=\"android-package\" value=\"org.bcsphere.wifi.BCWifi\" /></feature>": 1,
+                "<feature name=\"BCBluetooth\"><param name=\"android-package\" value=\"org.bcsphere.bluetooth.BCBluetooth\" /></feature>": 1
             }
         },
         "AndroidManifest.xml": {
             "/manifest": {
+                "<uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\" />": 1,
                 "<uses-permission android:name=\"android.permission.BLUETOOTH\" />": 1,
-                "<uses-permission android:name=\"android.permission.BLUETOOTH_ADMIN\" />": 1,
-                "<uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\" />": 1
+                "<uses-permission android:name=\"android.permission.BLUETOOTH_ADMIN\" />": 1
             },
             "/manifest/application": {
                 "<uses-library android:name=\"com.htc.android.bluetooth.le\" android:required=\"false\" />": 1
@@ -22,10 +22,10 @@
         }
     },
     "installed_plugins": {
-        "org.bcsphere.bluetooth": {
+        "org.bcsphere.wifi": {
             "PACKAGE_NAME": "org.bcsphere.bcsphere_core_dev"
         },
-        "org.bcsphere.wifi": {
+        "org.bcsphere.bluetooth": {
             "PACKAGE_NAME": "org.bcsphere.bcsphere_core_dev"
         }
     },

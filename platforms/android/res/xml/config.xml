@@ -15,10 +15,10 @@
     <access origin="*" />
     <preference name="fullscreen" value="true" />
     <preference name="webviewbounce" value="true" />
-    <feature name="BCBluetooth">
-        <param name="android-package" value="org.bcsphere.bluetooth.BCBluetooth" />
-    </feature>
     <feature name="BCWifi">
         <param name="android-package" value="org.bcsphere.wifi.BCWifi" />
+    </feature>
+    <feature name="BCBluetooth">
+        <param name="android-package" value="org.bcsphere.bluetooth.BCBluetooth" />
     </feature>
 </widget>

@@ -11,16 +11,16 @@
         },
         "config.xml": {
             "/*": {
-                "<feature name=\"BCBluetooth\"><param name=\"ios-package\" value=\"BCBluetooth\" /></feature>": 1,
-                "<feature name=\"BCWifi\"><param name=\"ios-package\" value=\"org.bcsphere.wifi.BCWifi\" /></feature>": 1
+                "<feature name=\"BCWifi\"><param name=\"ios-package\" value=\"org.bcsphere.wifi.BCWifi\" /></feature>": 1,
+                "<feature name=\"BCBluetooth\"><param name=\"ios-package\" value=\"BCBluetooth\" /></feature>": 1
             }
         }
     },
     "installed_plugins": {
-        "org.bcsphere.bluetooth": {
+        "org.bcsphere.wifi": {
             "PACKAGE_NAME": "com.jumacc.webblue"
         },
-        "org.bcsphere.wifi": {
+        "org.bcsphere.bluetooth": {
             "PACKAGE_NAME": "com.jumacc.webblue"
         }
     },
