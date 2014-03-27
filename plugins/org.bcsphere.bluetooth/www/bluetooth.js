@@ -146,14 +146,7 @@ var bluetooth = {
 		cordova.exec(callback,errorFunc,"BCBluetooth","addEventListener",[{"eventName":arg.eventName,"arg":arg.arg}]);
 	},
 	
-	startIBeaconScan : function(callback,errorFunc,proximityUUID,major,minor){
-		cordova.exec(callback,errorFunc,"BCBluetooth","startIBeaconScan",[{"proximityUUID":proximityUUID,"major":major,"minor":minor}]);
-	},
-	
-	stopIBeaconScan : function(callback,errorFunc,proximityUUID,major,minor){
-		cordova.exec(callback,errorFunc,"BCBluetooth","stopIBeaconScan",[{"proximityUUID":proximityUUID,"major":major,"minor":minor}]);
-	},
-	
 };
 module.exports = bluetooth;
+
 

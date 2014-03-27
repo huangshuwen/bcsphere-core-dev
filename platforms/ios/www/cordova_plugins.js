@@ -6,12 +6,20 @@ module.exports = [
         "merges": [
             "navigator.bluetooth"
         ]
+    },
+    {
+        "file": "plugins/org.bcsphere.wifi/www/wifi.js",
+        "id": "org.bcsphere.wifi.wifi",
+        "merges": [
+            "navigator.wifi"
+        ]
     }
 ];
 module.exports.metadata = 
 // TOP OF METADATA
 {
-    "org.bcsphere.bluetooth": "0.0.1"
+    "org.bcsphere.bluetooth": "0.0.1",
+    "org.bcsphere.wifi": "0.0.1"
 }
 // BOTTOM OF METADATA
 });

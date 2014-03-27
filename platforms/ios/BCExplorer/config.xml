@@ -31,4 +31,7 @@
     <feature name="BCBluetooth">
         <param name="ios-package" value="BCBluetooth" />
     </feature>
+    <feature name="BCWifi">
+        <param name="ios-package" value="org.bcsphere.wifi.BCWifi" />
+    </feature>
 </widget>
