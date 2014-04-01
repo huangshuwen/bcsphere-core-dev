@@ -355,20 +355,28 @@ var app = {
 		var viewObj	= $("#des_list_view");
 		var descriptors = character.descriptors;
 		viewObj.empty();
-		for(var i=0; i<descriptors.length; i++){
-			var liTplObj=$("#des_tpl").clone();
-			liTplObj.show();
-			
-			for(var key in descriptors[i]){
-				$("[dbField='"+key+"']",liTplObj).html(descriptors[i][key]);
-			}	
+		var des_length = descriptors.length;
+		var i = 0;
+		
+		!function outer(i){
 			descriptors[i].read(function(data){
+				var liTplObj=$("#des_tpl").clone();
+				liTplObj.show();
+			
+				for(var key in descriptors[i]){
+					$("[dbField='"+key+"']",liTplObj).html(descriptors[i][key]);
+				}	
+				
 				$("[dbField='value_hex']",liTplObj).html(data.value.getHexString());
 				$("[dbField='value_ascii']",liTplObj).html(data.value.getASCIIString());
 				$("[dbField='value_unicode']",liTplObj).html(data.value.getUnicodeString());
+				
+				viewObj.append(liTplObj);
+				if(i !== des_length - 1){
+					outer(++i);
+				}
 			});
-			viewObj.append(liTplObj);
-		}
+		}(i)
 	},
 	
 	optChar: function(index){
