@@ -96,7 +96,7 @@ var app = {
 		if(!BC.bluetooth.isopen){
 			if(API !== "ios"){
 				BC.Bluetooth.OpenBluetooth(function(){
-					BC.Bluetooth.StartScan();
+
 				});
 			}else{					
 				alert("Please open your bluetooth first.");
