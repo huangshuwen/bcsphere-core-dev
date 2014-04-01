@@ -96,7 +96,7 @@ var app = {
 		if(!BC.bluetooth.isopen){
 			if(API !== "ios"){
 				BC.Bluetooth.OpenBluetooth(function(){
-
+				
 				});
 			}else{					
 				alert("Please open your bluetooth first.");
@@ -355,28 +355,20 @@ var app = {
 		var viewObj	= $("#des_list_view");
 		var descriptors = character.descriptors;
 		viewObj.empty();
-		var des_length = descriptors.length;
-		var i = 0;
-		
-		!function outer(i){
-			descriptors[i].read(function(data){
-				var liTplObj=$("#des_tpl").clone();
-				liTplObj.show();
+		for(var i=0; i<descriptors.length; i++){
+			var liTplObj=$("#des_tpl").clone();
+			liTplObj.show();
 			
-				for(var key in descriptors[i]){
-					$("[dbField='"+key+"']",liTplObj).html(descriptors[i][key]);
-				}	
-				
+			for(var key in descriptors[i]){
+				$("[dbField='"+key+"']",liTplObj).html(descriptors[i][key]);
+			}	
+			descriptors[i].read(function(data){
 				$("[dbField='value_hex']",liTplObj).html(data.value.getHexString());
 				$("[dbField='value_ascii']",liTplObj).html(data.value.getASCIIString());
 				$("[dbField='value_unicode']",liTplObj).html(data.value.getUnicodeString());
-				
-				viewObj.append(liTplObj);
-				if(i !== des_length - 1){
-					outer(++i);
-				}
 			});
-		}(i)
+			viewObj.append(liTplObj);
+		}
 	},
 	
 	optChar: function(index){
