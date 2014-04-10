@@ -24,11 +24,12 @@ var app = {
     },
     
     bindCordovaEvents: function() {
+		//To support v0.2.1, future event should be object oriented.
         document.addEventListener('bcready', app.onBCReady, false);
-		document.addEventListener('deviceconnected', app.onDeviceConnected, false);
-		document.addEventListener('devicedisconnected', app.onBluetoothDisconnect, false);
-		document.addEventListener('newdevice', app.addNewDevice, false);
-		document.addEventListener('bluetoothstatechange', app.onBluetoothStateChange, false);
+		//document.addEventListener('deviceconnected', app.onDeviceConnected, false);
+		//document.addEventListener('devicedisconnected', app.onDeviceDisconnected, false);
+		//document.addEventListener('newdevice', app.addNewDevice, false);
+		//document.addEventListener('bluetoothstatechange', app.onBluetoothStateChange, false);
 		document.addEventListener('onsubscribestatechange', app.onSubscribeStateChange, false);
 		document.addEventListener('oncharacteristicread', app.onCharacteristicRead, false);
 		document.addEventListener('oncharacteristicwrite', app.onCharacteristicWrite, false);
@@ -56,7 +57,13 @@ var app = {
 	
 	onDeviceConnected : function(arg){
 		var deviceAddress = arg.deviceAddress;
+		alert(arg.deviceAddress +" is connected");
 		//alert("device:"+deviceAddress+" is connected!");
+	},
+	
+	onDeviceDisconnected: function(arg){
+		alert("device:"+arg.deviceAddress+" is disconnected!");
+		$.mobile.changePage("index.html","slideup");
 	},
 	
     bindUIEvents: function(){
@@ -93,6 +100,8 @@ var app = {
     },
     
     onBCReady: function() {
+		BC.bluetooth.addEventListener("bluetoothstatechange",app.onBluetoothStateChange);
+		BC.bluetooth.addEventListener("newdevice",app.addNewDevice);
 		if(!BC.bluetooth.isopen){
 			if(API !== "ios"){
 				BC.Bluetooth.OpenBluetooth(function(){
@@ -153,11 +162,14 @@ var app = {
 		alert(JSON.stringify(arg));
 	},
 	
-	addNewDevice: function(arg){
-		var deviceAddress = arg.deviceAddress;
+	addNewDevice: function(s){
+		var newDevice = s.target;
+		newDevice.addEventListener("deviceconnected",app.onDeviceConnected);
+		newDevice.addEventListener("devicedisconnected",app.onDeviceDisconnected);
+		
 		var viewObj	= $("#user_view");
 		var liTplObj=$("#li_tpl").clone();
-		var newDevice = BC.bluetooth.devices[deviceAddress];
+
 		$("a",liTplObj).attr("onclick","app.device_page('"+newDevice.deviceAddress+"')");
 		
 		liTplObj.show();
@@ -171,7 +183,7 @@ var app = {
 				$("[dbField='"+key+"']",liTplObj).html(newDevice[key]);
 			}
 		}	
-			
+
 		viewObj.append(liTplObj);
 		viewObj.listview("refresh");
 	},
@@ -185,11 +197,6 @@ var app = {
 			  "ManufacturerData(ASCII):"+app.device.advertisementData.manufacturerData.getASCIIString()+"\n"+
 			  "ManufacturerData(Unicode):"+app.device.advertisementData.manufacturerData.getUnicodeString());
 		}
-	},
-	
-	onBluetoothDisconnect: function(arg){
-		alert("device:"+arg.deviceAddress+" is disconnected!");
-		$.mobile.changePage("index.html","slideup");
 	},
 	
 	onScanStartSuccess: function(list){
@@ -229,6 +236,8 @@ var app = {
 	connectDevice: function(){
 		app.showLoader("Connecting and discovering services...");
 		app.device.connect(app.connectSuccess,app.connectError);
+		app.device.addEventListener("deviceconnected",function(s){alert("OBJECT EVENT!!! deviceconnected " + s.deviceAddress);});
+		app.device.addEventListener("devicedisconnected",function(s){alert("OBJECT EVENT!!! devicedisconnected " + s.deviceAddress)});
 	},
     connectError: function(){
         app.hideLoader();

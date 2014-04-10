@@ -204,6 +204,40 @@
 		}	
 	}
 	
+	//class extend function
+	var extend = function(protoProps, staticProps) {
+		var parent = this;
+		var child;
+
+		// The constructor function for the new subclass is either defined by you
+		// (the "constructor" property in your `extend` definition), or defaulted
+		// by us to simply call the parent's constructor.
+		if (protoProps && _.has(protoProps, 'constructor')) {
+		  child = protoProps.constructor;
+		} else {
+		  child = function(){ return parent.apply(this, arguments); };
+		}
+
+		// Add static properties to the constructor function, if supplied.
+		_.extend(child, parent, staticProps);
+
+		// Set the prototype chain to inherit from `parent`, without calling
+		// `parent`'s constructor function.
+		var Surrogate = function(){ this.constructor = child; };
+		Surrogate.prototype = parent.prototype;
+		child.prototype = new Surrogate;
+
+		// Add prototype properties (instance properties) to the subclass,
+		// if supplied.
+		if (protoProps) _.extend(child.prototype, protoProps);
+
+		// Set a convenience property in case the parent's prototype is needed
+		// later.
+		child.__super__ = parent.prototype;
+
+		return child;
+	};
+	
 	function aa(iterable) {
 		if (!iterable) return [];
 		// Safari <2.0.4 crashes when accessing property of a node list with property accessor.
@@ -251,42 +285,47 @@
 		document.dispatchEvent(event);
 	}
 	
+	document.addEventListener('deviceready', onDeviceReady, false);
+	
 	function onDeviceReady(){
 		var bluetooth = new BC.Bluetooth("cordova");
-		BC.bluetooth.addListener('disconnect', function(arg){
+		BC.bluetooth.addSystemListener('disconnect', function(arg){
 			BC.bluetooth.devices[arg.deviceAddress].isConnected = false;
+			BC.bluetooth.devices[arg.deviceAddress].dispatchEvent("devicedisconnected");
 			fireBLEEvent("devicedisconnected",arg.deviceAddress);
 		});
-		BC.bluetooth.addListener('onsubscribe', function(arg){
+		BC.bluetooth.addSystemListener('onsubscribe', function(arg){
 			var service = BC.bluetooth.services[arg.uniqueID];
 			service.characteristics[arg.characteristicIndex].isSubscribed = true;
 			fireBLEEvent("onsubscribestatechange",null,null,arg.characteristicIndex,null,arg.uniqueID);
 		});
-		BC.bluetooth.addListener('onunsubscribe', function(arg){
+		BC.bluetooth.addSystemListener('onunsubscribe', function(arg){
 			var service = BC.bluetooth.services[arg.uniqueID];
 			service.characteristics[arg.characteristicIndex].isSubscribed = false;
 			fireBLEEvent("onsubscribestatechange",null,null,arg.characteristicIndex,null,arg.uniqueID);
 		});
-		BC.bluetooth.addListener('oncharacteristicread', function(arg){
+		BC.bluetooth.addSystemListener('oncharacteristicread', function(arg){
 			fireBLEEvent("oncharacteristicread",null,null,arg.characteristicIndex,null,arg.uniqueID);
 		});
-		BC.bluetooth.addListener('oncharacteristicwrite', function(arg){
+		BC.bluetooth.addSystemListener('oncharacteristicwrite', function(arg){
 			var dataValue = new BC.DataValue(base64ToBuffer(arg.writeRequestValue));
 			fireBLEEvent("oncharacteristicwrite",null,null,arg.characteristicIndex,null,arg.uniqueID,dataValue);
 		});
-		BC.bluetooth.addListener('ondescriptorread', function(arg){
+		BC.bluetooth.addSystemListener('ondescriptorread', function(arg){
 			fireBLEEvent("ondescriptorread",null,null,arg.characteristicIndex,arg.descriptorIndex,arg.uniqueID);
 		});
-		BC.bluetooth.addListener('ondescriptorwrite', function(arg){
+		BC.bluetooth.addSystemListener('ondescriptorwrite', function(arg){
 			fireBLEEvent("ondescriptorwrite",null,null,arg.characteristicIndex,arg.descriptorIndex,arg.uniqueID);
 		});
 
 		document.addEventListener("bluetoothclose",function(){
 			BC.bluetooth.isopen = false;
+			BC.bluetooth.dispatchEvent("bluetoothstatechange");
 			fireBLEEvent("bluetoothstatechange");
 		},false);
 		document.addEventListener("bluetoothopen",function(){
 			BC.bluetooth.isopen = true;
+			BC.bluetooth.dispatchEvent("bluetoothstatechange");
 			fireBLEEvent("bluetoothstatechange");
 		},false);
 		
@@ -301,7 +340,7 @@
 			
 			//bind ibeacon event
 			if(API == "ios"){
-				BC.bluetooth.addListener('ibeaconaccuracyupdate', function(arg){
+				BC.bluetooth.addSystemListener('ibeaconaccuracyupdate', function(arg){
 					var majorStrObj = new BC.DataValue(base64ToBuffer(arg.major));
 					var minorStrObj = new BC.DataValue(base64ToBuffer(arg.minor));
 					var majorStr = majorStrObj.getHexString();
@@ -393,7 +432,62 @@
 		return ((s == undefined || s == null || s == "") ? true : false); 
 	}
 	
-	document.addEventListener('deviceready', onDeviceReady, false);
+	
+	var EventDispatcher = BC.EventDispatcher = function(){
+		var s = this;
+		s._eventList = new Array();
+		this.initialize.apply(this, arguments);
+	};
+	_.extend(EventDispatcher.prototype,{
+	
+		initialize:function(){},
+	
+		addEventListener:function(type,listener){
+			this._eventList.push({listener:listener,type:type});
+		},
+		
+		removeEventListener:function(type,listener){
+			var s = this,i,length;
+			length = s._eventList.length;
+			for(i=0; i < length; i++){
+				if(type == s._eventList[i].type && s._eventList[i].listener == listener){
+					s._eventList.splice(i,1);
+					return;
+				}
+			}
+		},
+		
+		removeAllEventListener:function (){
+			this._eventList = [];
+		},
+		
+		dispatchEvent:function(type,target){
+			var s = this;
+			var i,length = s._eventList.length;
+			for(i=0; i < length; i++){
+				if(type == s._eventList[i].type){
+					if(!isEmpty(target)){
+						s.target = target;
+					}else{
+						s.target = s;
+					}
+					s.event_type = type;
+					s._eventList[i].listener(s);
+					return;
+				}
+			}
+		},
+		
+		hasEventListener:function(type){
+			var s = this,i,length = s._eventList.length;
+			for(i=0; i < length; i++){
+				if(type == s._eventList[i].type)return true;
+			}
+			return false;
+		},
+		
+	});
+	EventDispatcher.extend = extend;
 	
 	//Portable Functions
 	var BluetoothFuncs = BC.BluetoothFuncs = function(type){
@@ -519,7 +613,7 @@
 			this.openBluetooth = function(success,error){
 				navigator.bluetooth.openBluetooth(success,error);
 			};
-			this.addEventListener = function(success,error,arg){
+			this.addSystemListener = function(success,error,arg){
 				navigator.bluetooth.addEventListener(success,error,arg);
 			};
 			this.notify = function(characteristic,data){
@@ -546,62 +640,63 @@
 	 * @property {Array<Service>} services - The services add by 'AddService' interface
 	 * @property {boolean} isopen - Bluetooth is open or not
 	 */
-	var Bluetooth = BC.Bluetooth = function(type){
-		//get bluetooth operate function package
-		this.bluetoothFuncs = new BC.BluetoothFuncs(type);
+	var Bluetooth = BC.Bluetooth = EventDispatcher.extend({
 		
-		//register functions in bluetooth object
-		this.detectionBluetoothAPI = this.bluetoothFuncs.detectionBluetoothAPI;
-		this.startScan = this.bluetoothFuncs.startScan;
-		this.stopScan = this.bluetoothFuncs.stopScan;
-		this.getDevices = this.bluetoothFuncs.getDevices;
-		this.connect = this.bluetoothFuncs.connect;
-		this.disconnect = this.bluetoothFuncs.disconnect;
-		this.getDeviceAllData = this.bluetoothFuncs.getDeviceAllData;
-		this.createPair = this.bluetoothFuncs.createPair;
-		this.removePair = this.bluetoothFuncs.removePair;
-		this.getConnectedDevices = this.bluetoothFuncs.getConnectedDevices;
-		this.getPairedDevices = this.bluetoothFuncs.getPairedDevices;
-		this.discoverServices = this.bluetoothFuncs.discoverServices;
-		this.discoverCharacteristics = this.bluetoothFuncs.discoverCharacteristics;
-		this.discoverDescriptors = this.bluetoothFuncs.discoverDescriptors;
-		this.readDescriptor = this.bluetoothFuncs.readDescriptor;
-		this.getEnvironment = this.bluetoothFuncs.getEnvironment;
-		this.getBluetoothState = this.bluetoothFuncs.getBluetoothState;
-		this.openBluetooth = this.bluetoothFuncs.openBluetooth;
-		this.addEventListener = this.bluetoothFuncs.addEventListener;
-		
-		//character operation
-		this.writeCharacteristic = this.bluetoothFuncs.writeCharacteristic;
-		this.readCharacteristic = this.bluetoothFuncs.readCharacteristic;
-		this.subscribe = this.bluetoothFuncs.subscribe;
-		this.unsubscribe = this.bluetoothFuncs.unsubscribe;
-		this.getRSSI = this.bluetoothFuncs.getRSSI;
-		this.addServices =  this.bluetoothFuncs.addServices;
-		this.removeService = this.bluetoothFuncs.removeService;
-		this.notify = this.bluetoothFuncs.notify;
-		this.startIBeaconScan = this.bluetoothFuncs.startIBeaconScan;
-		this.stopIBeaconScan = this.bluetoothFuncs.stopIBeaconScan;
-		this.startIBeaconAdvertising = this.bluetoothFuncs.startIBeaconAdvertising;
-		
-		this.bluetoothFuncs.initBluetooth();
+		initialize :function(type){
+			//get bluetooth operate function package
+			this.bluetoothFuncs = new BC.BluetoothFuncs(type);
+			
+			//register functions in bluetooth object
+			this.detectionBluetoothAPI = this.bluetoothFuncs.detectionBluetoothAPI;
+			this.startScan = this.bluetoothFuncs.startScan;
+			this.stopScan = this.bluetoothFuncs.stopScan;
+			this.getDevices = this.bluetoothFuncs.getDevices;
+			this.connect = this.bluetoothFuncs.connect;
+			this.disconnect = this.bluetoothFuncs.disconnect;
+			this.getDeviceAllData = this.bluetoothFuncs.getDeviceAllData;
+			this.createPair = this.bluetoothFuncs.createPair;
+			this.removePair = this.bluetoothFuncs.removePair;
+			this.getConnectedDevices = this.bluetoothFuncs.getConnectedDevices;
+			this.getPairedDevices = this.bluetoothFuncs.getPairedDevices;
+			this.discoverServices = this.bluetoothFuncs.discoverServices;
+			this.discoverCharacteristics = this.bluetoothFuncs.discoverCharacteristics;
+			this.discoverDescriptors = this.bluetoothFuncs.discoverDescriptors;
+			this.readDescriptor = this.bluetoothFuncs.readDescriptor;
+			this.getEnvironment = this.bluetoothFuncs.getEnvironment;
+			this.getBluetoothState = this.bluetoothFuncs.getBluetoothState;
+			this.openBluetooth = this.bluetoothFuncs.openBluetooth;
+			
+			//character operation
+			this.writeCharacteristic = this.bluetoothFuncs.writeCharacteristic;
+			this.readCharacteristic = this.bluetoothFuncs.readCharacteristic;
+			this.subscribe = this.bluetoothFuncs.subscribe;
+			this.unsubscribe = this.bluetoothFuncs.unsubscribe;
+			this.getRSSI = this.bluetoothFuncs.getRSSI;
+			this.addServices =  this.bluetoothFuncs.addServices;
+			this.removeService = this.bluetoothFuncs.removeService;
+			this.notify = this.bluetoothFuncs.notify;
+			this.startIBeaconScan = this.bluetoothFuncs.startIBeaconScan;
+			this.stopIBeaconScan = this.bluetoothFuncs.stopIBeaconScan;
+			this.startIBeaconAdvertising = this.bluetoothFuncs.startIBeaconAdvertising;
+			
+			this.bluetoothFuncs.initBluetooth();
 
-		/**
-		 * @property {object}  defaults               - The default values for parties.
-		 */
-		var bluetooth = BC.bluetooth = this;
-		
-		this.devices = {};
-		this.services = {};
-		this.ibeacons = {};
-		this.isopen = false;
-	};
-	_.extend(Bluetooth.prototype,{
-		addListener : function(eventName,callback,arg){
+			/**
+			 * @property {object}  defaults               - The default values for parties.
+			 */
+			var bluetooth = BC.bluetooth = this;
+			
+			this.devices = {};
+			this.services = {};
+			this.ibeacons = {};
+			this.isopen = false;
+		},
+	
+		addSystemListener : function(eventName,callback,arg){
 			var args = {};
 			args.eventName = eventName;
 			args.arg = arg;
-			this.addEventListener(callback,testFunc,args);
+			this.bluetoothFuncs.addSystemListener(callback,testFunc,args);
 		},
 	});
 	/** 
@@ -857,7 +952,9 @@
 						}
 					}
 				}else{
-					BC.bluetooth.devices[deviceAddress] = new BC.Device(deviceName,deviceAddress,advertisementData,isConnected,RSSI);
+					var newdevice = new BC.Device(deviceAddress,deviceName,advertisementData,isConnected,RSSI);
+					BC.bluetooth.devices[deviceAddress] = newdevice;
+					BC.bluetooth.dispatchEvent("newdevice",newdevice);
 					fireBLEEvent("newdevice",deviceAddress);
 				}
 			}else{
@@ -1131,7 +1228,7 @@
 			var length = this.value.byteLength;
 			var dv = new DataView(this.value);
 			var result= "";
-			for (var i=0; i<length;i++) {
+			for (var i=0; i<length; i++) {
 				if(dv.getUint8(i) < 16){
 					result+= '0' + dv.getUint8(i).toString(16);
 				}else{
@@ -1147,8 +1244,8 @@
 	 * Device represents the remote BLE Peripheral device. 
 	 * <p><b>Please note</b> that the application should not create Device object, BC manages the object model.
 	 * @class
-	 * @param {string} deviceName - The name of the device
 	 * @param {string} deviceAddress - The Address of the device(Address is assigned by the smart phone,if there is no Address, it is recommended to new the device instance after obtaining devices' information from BC.Bluetooth.StartScan)
+	 * @param {string} deviceName - The name of the device
 	 * @param {object} advertisementData - The device advertisement data, includes LocalName, TxPowerLevel, IsConnectable, ServiceData, ManufacturerData, ServiceUUIDs, SolicitedServiceUUIDs, OverflowServiceUUIDs
 	 * @param {boolean} isConnected - If this device is connected
 	 * @param {int} RSSI - The RSSI of the device
@@ -1167,29 +1264,30 @@
 	 * @property {DataValue} softwareRevision - The software revision of this device
 	 * @property {DataValue} manufacturerName - The manufacturer name of this device
 	 */
-	var Device = BC.Device = function(deviceName,deviceAddress,advertisementData,isConnected,RSSI){
-		this.deviceName = deviceName;
-		this.deviceAddress = deviceAddress;
-		this.advertisementData = advertisementData;
-		this.isConnected = isConnected;
-		this.services = [];
-		this.isPrepared = false;
-		this.systemID = null;
-		this.modelNum = null;
-		this.serialNum = null;
-		this.firmwareRevision = null;
-		this.hardwareRevision = null;
-		this.softwareRevision = null;
-		this.manufacturerName = null;
-		this.RSSI = RSSI;
-	};
-	_.extend(Device.prototype,{
+	var Device = BC.Device = EventDispatcher.extend({
+		
+		initialize : function(deviceAddress,deviceName,advertisementData,isConnected,RSSI){
+			this.deviceAddress = deviceAddress;
+			this.deviceName = deviceName;
+			this.advertisementData = advertisementData;
+			this.isConnected = isConnected;
+			this.services = [];
+			this.isPrepared = false;
+			this.systemID = null;
+			this.modelNum = null;
+			this.serialNum = null;
+			this.firmwareRevision = null;
+			this.hardwareRevision = null;
+			this.softwareRevision = null;
+			this.manufacturerName = null;
+			this.RSSI = RSSI;
+		},
 		
 		/**
 		 * Initiates a connection to the peripheral.
 		 * @memberof Device
 		 * @example //Gets a the Device instance.
-		 * var device = window.device = new BC.bluetooth.devices["78:C5:E5:99:26:37"];
+		 * var device = window.device = BC.bluetooth.devices["78:C5:E5:99:26:37"];
 		 * device.connect(function(){alert("device is already prepared well!");});
 		 * @param {function} successCallback - Success callback
 		 * @param {function} [errorCallback] - Error callback
@@ -1200,8 +1298,10 @@
 			this.error = error;
 			BC.bluetooth.connect(this);
 		},
+		
 		connectSuccess : function(){
 			this.isConnected = true;
+			this.dispatchEvent("deviceconnected");
 			fireBLEEvent("deviceconnected",this.deviceAddress);
 			this.success();
 		},
@@ -1214,7 +1314,7 @@
 		 * Discovers services in peripheral.</br>After calling this interface, all the characteristics and descriptors is accessible. 
 		 * @memberof Device
 		 * @example //Gets a the Device instance.
-		 * var device = window.device = new BC.bluetooth.devices["78:C5:E5:99:26:37"];
+		 * var device = window.device = BC.bluetooth.devices["78:C5:E5:99:26:37"];
 		 * device.connect(connectSuccess,function(){alert("connect device error!");});
 		 * function connectSuccess(){
 		 *	device.prepare(function(){alert("device prepared success!")},function(message){alert(message);});
@@ -1461,8 +1561,8 @@
 		},
 	});
 	
-	//Entity 
-	var Entity = BC.Entity = function(index,uuid,name,device,upper){
+	//GATTEntity 
+	var GATTEntity = BC.GATTEntity = function(index,uuid,name,device,upper){
 		this.index = index;
 		this.uuid = uuid;
 		this.name = name;
@@ -1470,46 +1570,10 @@
 		this.device = device;
 		this.initialize.apply(this, arguments);
 	};
-	_.extend(Entity.prototype,{
+	_.extend(GATTEntity.prototype,{
 		initialize: function(){},
 	});
-	
-	//class extend function
-	var extend = function(protoProps, staticProps) {
-    var parent = this;
-    var child;
-
-    // The constructor function for the new subclass is either defined by you
-    // (the "constructor" property in your `extend` definition), or defaulted
-    // by us to simply call the parent's constructor.
-    if (protoProps && _.has(protoProps, 'constructor')) {
-      child = protoProps.constructor;
-    } else {
-      child = function(){ return parent.apply(this, arguments); };
-    }
-
-    // Add static properties to the constructor function, if supplied.
-    _.extend(child, parent, staticProps);
-
-    // Set the prototype chain to inherit from `parent`, without calling
-    // `parent`'s constructor function.
-    var Surrogate = function(){ this.constructor = child; };
-    Surrogate.prototype = parent.prototype;
-    child.prototype = new Surrogate;
-
-    // Add prototype properties (instance properties) to the subclass,
-    // if supplied.
-    if (protoProps) _.extend(child.prototype, protoProps);
-
-    // Set a convenience property in case the parent's prototype is needed
-    // later.
-    child.__super__ = parent.prototype;
-
-    return child;
-  };
-
-  // Set up inheritance for object which need to inherit 
-  Entity.extend = extend;
+	GATTEntity.extend = extend;
   
   /**
    * BLE Service class.
@@ -1519,7 +1583,7 @@
    * @property {string} uuid - The uuid of this service
    * @property {string} name - The name of this service
    */
-  var Service = BC.Service = Entity.extend({
+  var Service = BC.Service = GATTEntity.extend({
 		characteristics : null,
 		
 		initialize : function(){
@@ -1617,7 +1681,7 @@
    * @property {string} uuid - The uuid of this characteristic
    * @property {string} name - The name of this characteristic
    */
-  var Characteristic = BC.Characteristic = Entity.extend({
+  var Characteristic = BC.Characteristic = GATTEntity.extend({
 		descriptors : null,
 		value : null,
 		property : null,
@@ -1885,7 +1949,7 @@
    * @property {string} uuid - The uuid of this descriptor
    * @property {string} name - The name of this descriptor
    */
-  var Descriptor = BC.Descriptor = Entity.extend({
+  var Descriptor = BC.Descriptor = GATTEntity.extend({
 		value : null,
 		
 		initialize : function(){
