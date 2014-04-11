@@ -296,19 +296,30 @@
 		});
 		BC.bluetooth.addSystemListener('onsubscribe', function(arg){
 			var service = BC.bluetooth.services[arg.uniqueID];
-			service.characteristics[arg.characteristicIndex].isSubscribed = true;
+			var character = service.characteristics[arg.characteristicIndex];
+			character.isSubscribed = true;
+			character.dispatchEvent("onsubscribestatechange");
 			fireBLEEvent("onsubscribestatechange",null,null,arg.characteristicIndex,null,arg.uniqueID);
 		});
 		BC.bluetooth.addSystemListener('onunsubscribe', function(arg){
 			var service = BC.bluetooth.services[arg.uniqueID];
-			service.characteristics[arg.characteristicIndex].isSubscribed = false;
+			var character = service.characteristics[arg.characteristicIndex];
+			character.isSubscribed = false;
+			character.dispatchEvent("onsubscribestatechange");
 			fireBLEEvent("onsubscribestatechange",null,null,arg.characteristicIndex,null,arg.uniqueID);
 		});
 		BC.bluetooth.addSystemListener('oncharacteristicread', function(arg){
+			var service = BC.bluetooth.services[arg.uniqueID];
+			var character = service.characteristics[arg.characteristicIndex];
+			character.dispatchEvent("oncharacteristicread");
 			fireBLEEvent("oncharacteristicread",null,null,arg.characteristicIndex,null,arg.uniqueID);
 		});
 		BC.bluetooth.addSystemListener('oncharacteristicwrite', function(arg){
 			var dataValue = new BC.DataValue(base64ToBuffer(arg.writeRequestValue));
+			character.writeValue = dataValue;
+			var service = BC.bluetooth.services[arg.uniqueID];
+			var character = service.characteristics[arg.characteristicIndex];
+			character.dispatchEvent("oncharacteristicwrite");
 			fireBLEEvent("oncharacteristicwrite",null,null,arg.characteristicIndex,null,arg.uniqueID,dataValue);
 		});
 		BC.bluetooth.addSystemListener('ondescriptorread', function(arg){
@@ -1562,16 +1573,17 @@
 	});
 	
 	//GATTEntity 
-	var GATTEntity = BC.GATTEntity = function(index,uuid,name,device,upper){
-		this.index = index;
-		this.uuid = uuid;
-		this.name = name;
-		this.upper = upper;
-		this.device = device;
-		this.initialize.apply(this, arguments);
-	};
-	_.extend(GATTEntity.prototype,{
-		initialize: function(){},
+	var GATTEntity = BC.GATTEntity = EventDispatcher.extend({
+		
+		initialize : function(index,uuid,name,device,upper){
+			this.index = index;
+			this.uuid = uuid;
+			this.name = name;
+			this.upper = upper;
+			this.device = device;
+			this.initialize.apply(this, arguments);
+		},
+		
 	});
 	GATTEntity.extend = extend;
   

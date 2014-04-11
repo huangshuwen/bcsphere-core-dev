@@ -458,6 +458,9 @@ var app = {
 		var onMyWriteRequestName = "myWriteRequest";
 		var onMyReadRequestName = "myReadRequest";
 		var character1 = BC.Bluetooth.CreateCharacteristic("0000ffe1-0000-1000-8000-00805f9b34fb","01","Hex",property,permission);
+		character1.addEventListener("onsubscribestatechange",function(s){alert("OBJECT EVENT!! onsubscribestatechange : (" + s.uuid + ") state:" + s.isSubscribed);});
+		character1.addEventListener("oncharacteristicread",function(s){alert("OBJECT EVENT!! oncharacteristicread : (" + s.uuid + ")");});
+		character1.addEventListener("oncharacteristicwrite",function(s){alert("OBJECT EVENT!! oncharacteristicwrite : (" + s.uuid + ") writeValue:" + s.writeValue.getHexString());});
 		var character2 = BC.Bluetooth.CreateCharacteristic("0000fff2-0000-1000-8000-00805f9b34fb","00","Hex",property,permission);
 		var descriptor1 = BC.Bluetooth.CreateDescriptor("00002901-0000-1000-8000-00805f9b34fb","00","Hex",permission);
 		var descriptor2 = BC.Bluetooth.CreateDescriptor("00002902-0000-1000-8000-00805f9b34fb","08","Hex",permission);
